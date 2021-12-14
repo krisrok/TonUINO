@@ -44,12 +44,18 @@ amazonVoiceByLang = {
     'it': 'Carla'
 }
 
+narratorVoiceByLang = {
+    'de': 'Hedda',
+    'en': 'Zira'
+}
+
 
 textToSpeechDescription = """
 The following text-to-speech engines are supported:
 - With `--use-say` the text-to-speech engine of MacOS is used (command `say`).
 - With `--use-amazon` Amazon Polly is used. Requires the AWS CLI to be installed and configured. See: https://aws.amazon.com/cli/
 - With `--use-google-key=ABCD` Google text-to-speech is used. See: https://cloud.google.com/text-to-speech/
+- With `--use-narrator` Windows' Narrator is used. Needs additional software balabolka and ffmpeg. See: http://balabolka.site/de/balabolka.htm
 
 Amazon Polly sounds best, Google text-to-speech is second, MacOS `say` sounds worst.'
 """.strip()
@@ -59,11 +65,12 @@ def addArgumentsToArgparser(argparser):
     argparser.add_argument('--use-say', action='store_true', default=None, help="If set, the MacOS tool `say` will be used.")
     argparser.add_argument('--use-amazon', action='store_true', default=None, help="If set, Amazon Polly is used. If missing the MacOS tool `say` will be used.")
     argparser.add_argument('--use-google-key', type=str, default=None, help="The API key of the Google text-to-speech account to use.")
+    argparser.add_argument('--use-narrator', type=str, default=None, help="Path to balabolka.exe and additional args")
 
 
 def checkArgs(argparser, args):
-    if not args.use_say and not args.use_amazon and args.use_google_key is None:
-        print('ERROR: You have to provide one of the arguments `--use-say`, `--use-amazon` or `--use-google-key`\n')
+    if not args.use_say and not args.use_amazon and args.use_google_key is None and args.use_narrator is None:
+        print('ERROR: You have to provide one of the arguments `--use-say`, `--use-amazon` or `--use-google-key or` or `--use-narrator`\n')
         argparser.print_help()
         sys.exit(2)
     if args.use_say:
@@ -72,6 +79,8 @@ def checkArgs(argparser, args):
         checkLanguage(googleVoiceByLang, args.lang, argparser)
     if args.use_amazon:
         checkLanguage(amazonVoiceByLang, args.lang, argparser)
+    if args.use_narrator:
+        checkLanguage(narratorVoiceByLang, args.lang, argparser)
 
 def checkLanguage(dictionary, lang, argparser):
     if lang not in dictionary:
@@ -81,10 +90,10 @@ def checkLanguage(dictionary, lang, argparser):
 
 
 def textToSpeechUsingArgs(text, targetFile, args):
-    textToSpeech(text, targetFile, lang=args.lang, useAmazon=args.use_amazon, useGoogleKey=args.use_google_key)
+    textToSpeech(text, targetFile, lang=args.lang, useAmazon=args.use_amazon, useGoogleKey=args.use_google_key, useNarrator=args.use_narrator)
 
 
-def textToSpeech(text, targetFile, lang='de', useAmazon=False, useGoogleKey=None):
+def textToSpeech(text, targetFile, lang='de', useAmazon=False, useGoogleKey=None, useNarrator=None):
     print('\nGenerating: ' + targetFile + ' - ' + text)
     if useAmazon:
         response = subprocess.check_output(['aws', 'polly', 'synthesize-speech', '--output-format', 'mp3',
@@ -111,6 +120,10 @@ def textToSpeech(text, targetFile, lang='de', useAmazon=False, useGoogleKey=None
 
         with open(targetFile, 'wb') as f:
             f.write(mp3Data)
+    elif useNarrator:
+        os.system( useNarrator + " -w temp.wav -n " + narratorVoiceByLang[lang] + " -t \"" + text + "\"")
+        subprocess.call([ 'ffmpeg', '-y', '-i', 'temp.wav', '-acodec', 'libmp3lame', '-ab', '128k', '-ac', '1', targetFile ])
+        os.remove('temp.wav')
     else:
         subprocess.call([ 'say', '-v', sayVoiceByLang[lang], '-o', 'temp.aiff', text ])
         subprocess.call([ 'ffmpeg', '-y', '-i', 'temp.aiff', '-acodec', 'libmp3lame', '-ab', '128k', '-ac', '1', targetFile ])

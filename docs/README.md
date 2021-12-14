@@ -92,7 +92,9 @@ Unter Linux kann Python 3 mit dem zur Distribution gehörenden Paketmanager inst
 
 Das Skript unerstützt dabei die Nutzung von drei text-to-speech Engines:
 
-- Lokal - nur unter macOS - mit den Tools `say` und `ffmpeg`. Sofern man einen Mac hat ist dieser Weg schnell, einfach und dauerhaft kostenlos.
+- Lokal
+  - macOS: Mit den Tools `say` und `ffmpeg`. Sofern man einen Mac hat ist dieser Weg schnell, einfach und dauerhaft kostenlos.#
+  - Windows: Mithilfe der Windows-Sprachausgabe `Narrator` und den zusätzlichen Softwares `Balabolka` und `ffmpeg`. Ebenfalls dauerhaft kostenlos.
 - Über das Internet mit Amazon Polly, dem text-to-speech Service von Amazon.
 - Über das Internet mit Hilfe des Cloud text-to-speech Service von Google.
 
@@ -122,6 +124,23 @@ Neben dem Tool `say` (ist Teil von macOS) wird hier noch `ffmpeg` benötigt.
 2. In den Ordner wechseln wo ihr die `.zip` Datei von GitHub entpackt, bzw. das Repository gecloned habt.
 3. `python3 tools/create_audio_messages.py --use-google-key=ABCD` ausführen.
 4. Kopiert nun den Inhalt des Ordners **sd-card** auf die SD Karte. Fertig.
+
+#### Audio Meldungen mit `Narrator` via `Balabolka` und `ffmpeg` erzeugen (Windows)
+
+Die Software `Balabolka` (Konsolenanwendung um die vorinstallierten Stimmen von `Narrator` zu verwenden) und `ffmpeg` (zur Umwandlung nach mp3) werden benötigt.
+
+Voraussetzung ist, dass die Stimmen zur Sprachausgabe in den Windows-Einstellungen bereitstehen, [siehe hier](https://support.microsoft.com/topic/d5a6b612-b3ae-423f-afa5-4f6caf1ec5d3).
+
+1. `ffmpeg` herunterladen, z.B. hier: https://www.gyan.dev/ffmpeg/builds/#release-builds
+2. `ffmpeg\bin` zum Umgebungspfad hinzufügen, Anleitung z.B. hier: https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10
+3. `Balabolka` herunterladen, entpacken, Pfad zur `balcon.exe` kopieren.
+4. In den Ordner wechseln wo ihr die `.zip` Datei von GitHub entpackt, bzw. das Repository gecloned habt.
+5. `python3 tools/create_audio_messages.py --use-narrator "pfad/zur/balcon.exe"` ausführen.
+6. Kopiert nun den Inhalt des Ordners **sd-card** auf die SD Karte. Fertig.
+
+Es können weitere Argumente angeben werden, z.B. um eine höhere Sprechgeschwindigkeit (`-s 3`) zu erzeugen:
+`python3 tools/create_audio_messages.py --use-narrator "pfad/zur/balcon.exe -s 3"`
+Alle Argumente sind auf der `Balabolka`-Website dokumentiert.
 
 #### Hilfe und weitere Optionen
 
